@@ -4,12 +4,12 @@
 * Сборка контейнера
 ```
 https://github.com/artyom-yurin/artem-pozval-app.git
-cd indexer
-docker build -t indexer .
+cd main
+docker build -t main .
 ```
 * Запуск Индексера
 ```
-docker run -it --gpus all -p 8125:8125 indexer 
+docker run -it --gpus all -p 8125:8125 main 
 ```
 * Пример запроса 
 ```

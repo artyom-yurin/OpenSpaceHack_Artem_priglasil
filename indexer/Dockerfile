@@ -1,6 +1,6 @@
 FROM python:3.6
-COPY . /indexer
-WORKDIR ./indexer
+COPY . /main
+WORKDIR ./main
 RUN pip install -r requirements.txt
 RUN pip install -U bert-serving-server[http]
 EXPOSE 8125

@@ -1,15 +1,19 @@
-package indexer;
+package utils;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
-public class IndexerRequest {
+public class Request {
     private String id;
     private ArrayList<String> texts;
     private boolean tokenized;
 
-    IndexerRequest(){}
+    Request(){}
 
-    IndexerRequest(String id, ArrayList<String> texts, boolean is_tokenized){
+    public Request(String id, ArrayList<String> texts, boolean is_tokenized){
         this.id = id;
         this.texts = texts;
         this.tokenized = is_tokenized;
@@ -38,6 +42,21 @@ public class IndexerRequest {
 
     public void set_tokenized(boolean is_tokenized) {
         this.tokenized = is_tokenized;
+    }
+
+    public static String make_post_request(String url, okhttp3.RequestBody body) throws IOException {
+        OkHttpClient httpClient = new OkHttpClient();
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        try (Response response = httpClient.newCall(request).execute()) {
+
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+            // Get response body
+            return response.body().string();
+        }
     }
 
     @Override
