@@ -9,6 +9,12 @@ public class IndexerRequest {
 
     IndexerRequest(){}
 
+    IndexerRequest(String id, ArrayList<String> texts, boolean is_tokenized){
+        this.id = id;
+        this.texts = texts;
+        this.tokenized = is_tokenized;
+    }
+
 
     public String getId() {
         return id;
@@ -38,8 +44,8 @@ public class IndexerRequest {
     public String toString() {
         return "{" +
                 "\"id\":"+ id +
-                ", \"texts\":" + texts.toString().replace("[","[\"").replace("]","\"]") +
-                ", \"tokenized\":" + tokenized +
+                ", \"texts\":" + texts.toString().replace("[","[\"").replace("]","\"]").replaceAll("\n"," ") +
+                ", \"is_tokenized\":" + tokenized +
                 '}';
     }
 }
