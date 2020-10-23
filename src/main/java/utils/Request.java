@@ -9,14 +9,14 @@ import java.util.ArrayList;
 public class Request {
     private String id;
     private ArrayList<String> texts;
-    private boolean tokenized;
+    private boolean is_tokenized;
 
     Request(){}
 
     public Request(String id, ArrayList<String> texts, boolean is_tokenized){
         this.id = id;
         this.texts = texts;
-        this.tokenized = is_tokenized;
+        this.is_tokenized = is_tokenized;
     }
 
 
@@ -37,11 +37,11 @@ public class Request {
     }
 
     public boolean is_tokenized() {
-        return tokenized;
+        return is_tokenized;
     }
 
     public void set_tokenized(boolean is_tokenized) {
-        this.tokenized = is_tokenized;
+        this.is_tokenized = is_tokenized;
     }
 
     public static String make_post_request(String url, okhttp3.RequestBody body) throws IOException {
@@ -63,9 +63,12 @@ public class Request {
     public String toString() {
         return "{" +
                 "\"id\":"+ id +
-                ", \"texts\":" + texts.toString().replace("[","[\"").replace("]","\"]").replaceAll("\n"," ") +
-                ", \"is_tokenized\":" + tokenized +
-                '}';
+                ", \"texts\":" + texts.toString()
+                                      .replace("[","[\"")
+                                      .replace("]","\"]")
+                                      .replaceAll("\n","")
+                                      .replaceAll("[.]"," ||| ")
+                + ", \"is_tokenized\":" + is_tokenized + '}';
     }
 }
 
