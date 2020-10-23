@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import utils.Request;
+import utils.RequestBody;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -36,10 +36,10 @@ public class IndexerController {
             JSONObject requestObj = new JSONObject(line);
             ArrayList<String> texts = new ArrayList<>();
             texts.add(requestObj.get("text").toString());
-            Request request = new Request(requestObj.get("id").toString(), texts, false);
+            RequestBody request = new RequestBody(requestObj.get("id").toString(), texts, false);
             String jsonStr = gson.toJson(request);
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonStr, this.JSON);
-            String response = Request.make_post_request("http://localhost:8125/encode", body);
+            String response = RequestBody.make_post_request("http://localhost:8125/encode", body);
             JSONObject responseObj = new JSONObject(response);
             responseObj.accumulate("url", requestObj.get("url"));
             writer.println(responseObj.toString());
