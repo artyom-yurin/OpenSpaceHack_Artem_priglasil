@@ -28,9 +28,9 @@ public class IndexerController {
 
     @GetMapping("/index")
     ResponseEntity<String> index() throws IOException, JSONException {
-        File file = new File("src/main/resources/KnowledgeBase/wiki");
+        File file = new File("path/to/file");
         Scanner sc = new Scanner(file);
-        PrintWriter writer = new PrintWriter(new FileWriter("src/main/resources/KnowledgeBase/index"));
+        PrintWriter writer = new PrintWriter(new FileWriter("path/to/file"));
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
             JSONObject requestObj = new JSONObject(line);

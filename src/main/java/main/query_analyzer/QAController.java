@@ -38,7 +38,7 @@ public class QAController {
 
     double[][] make_doc_matrix() throws FileNotFoundException, JSONException {
         ArrayList<double[]> docList = new ArrayList<>();
-        File file = new File("src/main/resources/KnowledgeBase/index");
+        File file = new File("path/to/file");
         Scanner sc = new Scanner(file);
         while (sc.hasNextLine()){
             String line = sc.nextLine();
