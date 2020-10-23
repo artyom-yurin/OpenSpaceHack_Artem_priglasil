@@ -9,8 +9,10 @@ services:
     restart: always
     ports:
     - 5432:5432
-    env_file:
-      - questions_db_postgres.env
+    environment:
+      POSTGRES_USER: artem_priglasil
+      POSTGRES_PASSWORD: 4r73m_pr1gl451l
+      POSTGRES_DB: questions
   context_redis_db:
     image: redis
     ports:
