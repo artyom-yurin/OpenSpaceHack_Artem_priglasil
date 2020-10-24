@@ -1,6 +1,7 @@
 package main.query_analyzer;
 
 import com.google.gson.Gson;
+import models.Context;
 import okhttp3.MediaType;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utils.CosineSimilarity;
 import utils.DatabaseController;
-import utils.MessageResponse;
-import utils.RequestBody;
+import models.MessageResponse;
+import models.RequestBody;
+import utils.JwtUtil;
+import utils.RedisController;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,7 +25,8 @@ import java.util.*;
 @RestController
 public class QAController {
 
-
+    private JwtUtil jwtUtil = new JwtUtil();
+    private RedisController redis = new RedisController();
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final Gson gson = new Gson();
 
@@ -30,7 +34,7 @@ public class QAController {
         ArrayList<double[]> docList = new ArrayList<>();
         File file = new File("path/to/file");
         Scanner sc = new Scanner(file);
-        while (sc.hasNextLine()){
+        while (sc.hasNextLine()) {
             String line = sc.nextLine();
             JSONObject object = new JSONObject(line);
             JSONArray innerArray = object.getJSONArray("result").getJSONArray(0);
@@ -47,14 +51,30 @@ public class QAController {
     }
 
     @GetMapping(value = "/api/chat/v1/bot", produces = "application/json")
-    ResponseEntity<String> message(@RequestParam(value = "question", defaultValue = "") String question) throws IOException, JSONException, SQLException {
-        if (question.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("Question is empty");
+    ResponseEntity<String> message(@CookieValue(value = "OpenChat", defaultValue = "") String token, @RequestParam(value = "question", defaultValue = "") String question) throws IOException, JSONException, SQLException {
+        if (token.isEmpty()) {
+            return ResponseEntity.status(401)
+                    .body("I don't know you");
         }
 
+
+        String chatId = jwtUtil.parseToken(token);
+        if (chatId == null) {
+            return ResponseEntity.status(401)
+                    .body("I don't know you");
+        }
+
+        Context context = redis.getContextByChatId(chatId);
+        if (context == null) {
+            System.out.println("Context is " + context);
+        } else {
+            System.out.println("Context state is " + context.getState().toString());
+        }
+        // TODO: get context and decide what to do
+
+
         RequestBody req_body = new RequestBody();
-        req_body.setId("Some chat id");
+        req_body.setId(chatId);
         ArrayList<String> messages = new ArrayList<>();
         messages.add(question);
         req_body.setTexts(messages);
@@ -67,6 +87,10 @@ public class QAController {
         DatabaseController controller = new DatabaseController();
         if (controller.establishConnection()) {
             System.out.println("Database connected");
+        } else {
+            System.out.println("Connection failed");
+            return ResponseEntity.status(505)
+                    .body("Db connection failed");
         }
         Double[][] docMatrix = controller.get_vectors();
         double[] query_vector = new double[768];
@@ -76,7 +100,7 @@ public class QAController {
         double[] similarity = CosineSimilarity.cosine_similarity(docMatrix, query_vector);
         Map<Double, Integer> map = new HashMap<>();
         for (int i = 0; i < similarity.length; i++) {
-            map.put(similarity[i], i+1);
+            map.put(similarity[i], i + 1);
         }
         List<Double> sortedMap = new ArrayList<>(map.keySet());
         sortedMap.sort(Collections.reverseOrder());
@@ -85,7 +109,9 @@ public class QAController {
         for (int i = 0; i < ids.length; i++) {
             ids[i] = map.get(sortedMap.get(i));
         }
+/*
         controller.closeConnection();
+*/
         MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
         return ResponseEntity.ok(gson.toJson(resp));
     }
