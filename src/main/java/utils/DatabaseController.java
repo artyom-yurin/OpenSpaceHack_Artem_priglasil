@@ -153,4 +153,13 @@ public class DatabaseController {
         }
         return vectors;
     }
+
+    public String get_question(int _id) throws SQLException {
+        String sql_get = "SELECT question FROM knowledge_base WHERE id = ?";
+        PreparedStatement get_stmt = connection.prepareStatement(sql_get);
+        get_stmt.setInt(1, _id);
+        ResultSet vector = get_stmt.executeQuery();
+        vector.next();
+        return vector.getString("question");
+    }
 }
