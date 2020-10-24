@@ -2,11 +2,11 @@ package utils;
 
 public class CosineSimilarity{
 
-    public static double[] cosine_similarity(double[][] docMatrix, double[] query){
+    public static double[] cosine_similarity(Double[][] docMatrix, double[] query){
         double[] scores = new double[docMatrix.length];
 
         for (int i = 0; i < docMatrix.length; i++) {
-            double[] docVector = docMatrix[i];
+            Double[] docVector = docMatrix[i];
             double sumProduct = 0;
             double sumASq = 0;
             double sumBSq = 0;
