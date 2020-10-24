@@ -126,4 +126,31 @@ public class DatabaseController {
         }
         return true;
     }
+
+    public Double[] get_vector(int _id) throws SQLException{
+        String sql_get = "SELECT vector FROM vectors WHERE id = ?";
+        PreparedStatement get_stmt = connection.prepareStatement(sql_get);
+        get_stmt.setInt(1, _id);
+        ResultSet vector = get_stmt.executeQuery();
+        vector.next();
+        Array vectors = vector.getArray("vector");
+        return (Double[])vectors.getArray();
+    }
+
+    public Double[][] get_vectors() throws SQLException {
+        String get_max_id = "SELECT id\n" +
+                "FROM vectors \n" +
+                "ORDER BY id DESC \n" +
+                "LIMIT 1\n";
+        Statement max_id_stmt = connection.createStatement();
+        ResultSet max_id_result = max_id_stmt.executeQuery(get_max_id);
+        max_id_result.next();
+        int max_id = max_id_result.getInt("id");
+        Double[][] vectors = new Double[max_id][max_id];
+        for (int i = 1; i <= max_id; i++) {
+            Double[] vector = get_vector(i);
+            vectors[i - 1] = vector;
+        }
+        return vectors;
+    }
 }

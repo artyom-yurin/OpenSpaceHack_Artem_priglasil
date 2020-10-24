@@ -11,8 +11,15 @@ public class DatabaseTest {
         if (controller.establishConnection()) {
             System.out.println("Database connected");
         }
-        controller.prepareDb();
+        /*controller.prepareDb();
         controller.initDb();
-        controller.index();
+        controller.index();*/
+        Double[][] vects = controller.get_vectors();
+        for (Double[] vect : vects) {
+            for (Double arr : vect) {
+                System.out.print(arr.toString() + ' ');
+            }
+            System.out.println();
+        }
     }
 }
