@@ -21,7 +21,6 @@ public class DatabaseTest {
             }
             System.out.println();
         }*/
-        System.out.println(controller.get_question(1));
-        controller.closeConnection();
+        System.out.println(controller.get_question(1).getAnswer());
     }
 }

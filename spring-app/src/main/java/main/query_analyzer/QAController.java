@@ -112,7 +112,7 @@ public class QAController {
 /*
         controller.closeConnection();
 */
-        MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
+        MessageResponse resp = new MessageResponse(controller.get_question(ids[0]).getAnswer());
         return ResponseEntity.ok(gson.toJson(resp));
     }
 
