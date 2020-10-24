@@ -1,0 +1,46 @@
+.App {
+    padding: 0 8%;
+    background: #FFFFFF;
+    margin: 44px 0;
+}
+
+@media (min-width: 810px) {
+    .App {margin-bottom: 84px;}
+}
+
+.answerSuggestion {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 10px;
+    margin: 10px;
+
+    background: #02BAE8;
+
+    font-family: Graphik LC;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    text-align: center;
+
+
+    /* Primary/White */
+
+    color: #FFFFFF;
+}
+
+.answerSuggestion:hover {
+    background: #0ACEFF;
+}
+
+.answerSuggestions {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row wrap;
+    flex-flow: row wrap;
+    align-content: center;
+    justify-content: flex-start;
+
+    padding-top: 10px;
+
+}
