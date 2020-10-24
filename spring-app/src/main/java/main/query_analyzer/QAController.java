@@ -1,7 +1,9 @@
 package main.query_analyzer;
 
 import com.google.gson.Gson;
+import main.tokens.TokenController;
 import models.Context;
+import models.ConversationState;
 import okhttp3.MediaType;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,53 +69,56 @@ public class QAController {
         Context context = redis.getContextByChatId(chatId);
         if (context == null) {
             System.out.println("Context is " + context);
+            return ResponseEntity.status(500).body("Context state failed");
         } else {
             System.out.println("Context state is " + context.getState().toString());
         }
         // TODO: get context and decide what to do
+        ConversationState state = context.getState();
+        if (state == ConversationState.Init) {
+            RequestBody req_body = new RequestBody();
+            req_body.setId(chatId);
+            ArrayList<String> messages = new ArrayList<>();
+            messages.add(question);
+            req_body.setTexts(messages);
+            req_body.set_tokenized(false);
+
+            okhttp3.RequestBody body = okhttp3.RequestBody.create(gson.toJson(req_body), JSON);
+            JSONObject response = new JSONObject(RequestBody.make_post_request("http://indexer:8125/encode", body));
+            JSONArray innerArray = response.getJSONArray("result").getJSONArray(0);
+
+            DatabaseController controller = new DatabaseController();
+            if (controller.establishConnection()) {
+                System.out.println("Database connected");
+            } else {
+                System.out.println("Connection failed");
+                return ResponseEntity.status(505)
+                        .body("Db connection failed");
+            }
+            Double[][] docMatrix = controller.get_vectors();
+            double[] query_vector = new double[768];
+            for (int i = 0; i < innerArray.length(); i++) {
+                query_vector[i] = innerArray.getDouble(i);
+            }
+            double[] similarity = CosineSimilarity.cosine_similarity(docMatrix, query_vector);
+            Map<Double, Integer> map = new HashMap<>();
+            for (int i = 0; i < similarity.length; i++) {
+                map.put(similarity[i], i + 1);
+            }
+            List<Double> sortedMap = new ArrayList<>(map.keySet());
+            sortedMap.sort(Collections.reverseOrder());
+
+            List<Double> map_best = sortedMap.subList(0,10);
+            System.out.println(map_best.toString());
 
 
-        RequestBody req_body = new RequestBody();
-        req_body.setId(chatId);
-        ArrayList<String> messages = new ArrayList<>();
-        messages.add(question);
-        req_body.setTexts(messages);
-        req_body.set_tokenized(false);
-
-        okhttp3.RequestBody body = okhttp3.RequestBody.create(gson.toJson(req_body), JSON);
-        JSONObject response = new JSONObject(RequestBody.make_post_request("http://indexer:8125/encode", body));
-        JSONArray innerArray = response.getJSONArray("result").getJSONArray(0);
-
-        DatabaseController controller = new DatabaseController();
-        if (controller.establishConnection()) {
-            System.out.println("Database connected");
-        } else {
-            System.out.println("Connection failed");
-            return ResponseEntity.status(505)
-                    .body("Db connection failed");
+        } else{
+            System.out.println("");
         }
-        Double[][] docMatrix = controller.get_vectors();
-        double[] query_vector = new double[768];
-        for (int i = 0; i < innerArray.length(); i++) {
-            query_vector[i] = innerArray.getDouble(i);
-        }
-        double[] similarity = CosineSimilarity.cosine_similarity(docMatrix, query_vector);
-        Map<Double, Integer> map = new HashMap<>();
-        for (int i = 0; i < similarity.length; i++) {
-            map.put(similarity[i], i + 1);
-        }
-        List<Double> sortedMap = new ArrayList<>(map.keySet());
-        sortedMap.sort(Collections.reverseOrder());
 
-        int[] ids = new int[5];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = map.get(sortedMap.get(i));
-        }
-/*
-        controller.closeConnection();
-*/
-        MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
-        return ResponseEntity.ok(gson.toJson(resp));
+
+            //MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
+            return ResponseEntity.ok().build(); //(gson.toJson(resp));
     }
 
 
