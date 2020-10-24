@@ -4,6 +4,23 @@
     margin: 44px 0;
 }
 
+.App .rsc{
+    margin: 0 auto;
+    width: 60%;
+}
+
+.App .rsc-ts-bubble{
+    border-radius: 0;
+}
+
+.App .rsc-os{
+    margin-left: 5%;
+}
+
+.App .rsc-os-option-element{
+    border-radius: 0;
+}
+
 @media (min-width: 810px) {
     .App {margin-bottom: 84px;}
 }
