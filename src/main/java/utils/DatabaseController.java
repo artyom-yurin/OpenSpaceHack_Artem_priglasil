@@ -2,13 +2,16 @@ package utils;
 
 import com.google.gson.Gson;
 import okhttp3.*;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.postgresql.util.PGobject;
 import utils.RequestBody;
 
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class DatabaseController {
@@ -99,7 +102,7 @@ public class DatabaseController {
         Statement get_questions = connection.createStatement();
         ResultSet questions = get_questions.executeQuery("SELECT id, question FROM knowledge_base");
         while (questions.next()) {
-            System.out.println(questions.getString("question"));
+            // System.out.println(questions.getString("question"));
             ArrayList<String> texts = new ArrayList<>();
             texts.add(questions.getString("question"));
             RequestBody request = new utils.RequestBody("121", texts, false);
@@ -107,7 +110,16 @@ public class DatabaseController {
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonStr, this.JSON);
             String response = RequestBody.make_post_request("http://10.241.1.243:8125/encode ", body);
             JSONObject responseObj = new JSONObject(response);
-            System.out.println(responseObj.toString());
+            // System.out.println(responseObj.toString());
+            JSONArray vector = responseObj.getJSONArray("result").getJSONArray(0);
+
+            double[] list = new double[vector.length()];
+            for (int i = 0; i < vector.length(); i++) {
+                list[i] = vector.getDouble(i);
+            }
+
+
+
         }
         return true;
     }
