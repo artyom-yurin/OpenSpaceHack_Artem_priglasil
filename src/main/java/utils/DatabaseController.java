@@ -113,13 +113,16 @@ public class DatabaseController {
             // System.out.println(responseObj.toString());
             JSONArray vector = responseObj.getJSONArray("result").getJSONArray(0);
 
-            double[] list = new double[vector.length()];
+            Double[] list = new Double[vector.length()];
             for (int i = 0; i < vector.length(); i++) {
                 list[i] = vector.getDouble(i);
             }
-
-
-
+            String vectors_sql = "INSERT INTO vectors VALUES (?, ?)";
+            PreparedStatement vector_obj = connection.prepareStatement(vectors_sql);
+            vector_obj.setInt(1, questions.getInt("id"));
+            java.sql.Array vect_arr = connection.createArrayOf("FLOAT", list);
+            vector_obj.setArray(2, vect_arr);
+            vector_obj.executeUpdate();
         }
         return true;
     }
