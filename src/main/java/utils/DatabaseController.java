@@ -44,6 +44,10 @@ public class DatabaseController {
         return this.connection != null;
     }
 
+    public void closeConnection() throws SQLException {
+        this.connection.close();
+    }
+
     public void prepareDb() {
         String prep_query = "DROP TABLE IF EXISTS knowledge_base, vectors";
         try (PreparedStatement prSt = connection.prepareStatement(prep_query)) {
