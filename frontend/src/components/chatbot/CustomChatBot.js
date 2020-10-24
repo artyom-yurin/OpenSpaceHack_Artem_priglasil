@@ -1,16 +1,11 @@
 import React from "react";
 import ChatBot from "react-simple-chatbot";
 import {ThemeProvider} from "styled-components";
-import AnswerSuggestion from "../AnswerSuggestion";
 
-async function eventHandler(text) {
+function eventHandler(text) {
     var url = "http://127.0.0.1:8080/api/chat/v1/bot?question=" + text
-    await fetch(url)
-        .then(results => results.json())
-        .then(json => {
-            console.log(json)
-            return json.answer;
-        });
+    var request = require("sync-request")
+    return JSON.parse(request("GET", url).getBody('utf8')).answer
 }
 
 function CustomChatBot(props) {
@@ -49,7 +44,8 @@ function CustomChatBot(props) {
         {
             id: "suggest",
             message: ({previousValue, steps}) => {
-                return eventHandler(previousValue);
+                var t = eventHandler(previousValue)
+                return t
                 // return previousValue;
             },
             trigger: "satisfaction_question"
