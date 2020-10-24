@@ -3,9 +3,7 @@ version: '3.1'
 services:
 
   questions_postgres_db:
-    image: postgres
-    volumes:
-      - questions-db-data:/var/lib/postgresql/data/
+    build: .
     restart: always
     ports:
     - 5432:5432

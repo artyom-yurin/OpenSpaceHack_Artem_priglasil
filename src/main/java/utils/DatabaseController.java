@@ -40,13 +40,15 @@ public class DatabaseController {
 
     public boolean initDb() {
         prepareDb();
-        String table_create = "CREATE TABLE IF NOT EXISTS knowledge_base(id INT PRIMARY KEY NOT NULL, " +
+        String table_create = "CREATE TABLE IF NOT EXISTS knowledge_base(id SERIAL, " +
+                "kb_id VARCHAR(256)," +
                 "request TEXT NOT NULL, " +
-                "request_type TEXT, dbo_type TEXT, " +
+                "request_type TEXT, " +
+                "dbo_type TEXT, " +
                 "question TEXT NOT NULL, " +
                 "video_link TEXT, " +
                 "faq_link TEXT, " +
-                "usage TEXT, " +
+                "use_link TEXT, " +
                 "step1 TEXT, " +
                 "step2 TEXT, " +
                 "step3 TEXT, " +
@@ -63,9 +65,14 @@ public class DatabaseController {
                 "step14 TEXT)";
         try (PreparedStatement prSt = connection.prepareStatement(table_create)) {
             prSt.executeUpdate();
-            System.out.printf("JOPA CbELA TRYCbl");
         } catch (Exception e) {
-            System.out.println("Database preparation failed");
+            System.out.println("Database initialization failed");
+        }
+        String fill_db = "COPY knowledge_base(kb_id, request, request_type, dbo_type, question, video_link, faq_link, use_link, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14) FROM '/app/KB.csv' DELIMITER ',' CSV HEADER";
+        try (PreparedStatement prSt = connection.prepareStatement(fill_db)) {
+            prSt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database filling failed");
         }
         return true;
     }
