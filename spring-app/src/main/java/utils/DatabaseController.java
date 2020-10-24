@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class DatabaseController {
     //  Database credentials
-    static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/questions";
+    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/questions";
     static final String USER = "artem_priglasil";
     static final String PASS = "4r73m_pr1gl451l";
     private java.sql.Connection connection;
@@ -113,7 +113,7 @@ public class DatabaseController {
             RequestBody request = new utils.RequestBody("121", texts, false);
             String jsonStr = gson.toJson(request);
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonStr, this.JSON);
-            String response = RequestBody.make_post_request("http://10.241.1.243:8125/encode ", body);
+            String response = RequestBody.make_post_request("http://indexer:8125/encode ", body);
             JSONObject responseObj = new JSONObject(response);
             // System.out.println(responseObj.toString());
             JSONArray vector = responseObj.getJSONArray("result").getJSONArray(0);

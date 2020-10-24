@@ -19,6 +19,17 @@ services:
     build: ./indexer
     volumes:
       - ./rubert_cased_L-12_H-768_A-12_v1:/indexer/rubert_cased_L-12_H-768_A-12_v1
+    links:
+      - "questions_postgres_db"
+      - "context_redis_db"
+  spring-app:
+    build: ./spring-app
+    ports:
+      - "8080:8080"
+    links:
+      - "questions_postgres_db"
+      - "context_redis_db"
+      - "indexer"
 
 
 volumes:

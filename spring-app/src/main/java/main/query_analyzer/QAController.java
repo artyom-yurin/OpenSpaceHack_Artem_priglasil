@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class QAController {
 
@@ -60,7 +61,7 @@ public class QAController {
         req_body.set_tokenized(false);
 
         okhttp3.RequestBody body = okhttp3.RequestBody.create(gson.toJson(req_body), JSON);
-        JSONObject response = new JSONObject(RequestBody.make_post_request("http://localhost:8125/encode", body));
+        JSONObject response = new JSONObject(RequestBody.make_post_request("http://indexer:8125/encode", body));
         JSONArray innerArray = response.getJSONArray("result").getJSONArray(0);
 
         DatabaseController controller = new DatabaseController();

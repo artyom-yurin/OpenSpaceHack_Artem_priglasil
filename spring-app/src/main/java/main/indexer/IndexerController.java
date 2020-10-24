@@ -3,19 +3,18 @@ package main.indexer;
 import com.google.gson.Gson;
 import okhttp3.*;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import utils.DatabaseController;
-import utils.RequestBody;
 
 import java.io.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
+
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class IndexerController {
     MediaType JSON;
