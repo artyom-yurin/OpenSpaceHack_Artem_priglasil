@@ -14,12 +14,13 @@ public class DatabaseTest {
         /*controller.prepareDb();
         controller.initDb();
         controller.index();*/
-        Double[][] vects = controller.get_vectors();
+        /*Double[][] vects = controller.get_vectors();
         for (Double[] vect : vects) {
             for (Double arr : vect) {
                 System.out.print(arr.toString() + ' ');
             }
             System.out.println();
-        }
+        }*/
+        System.out.println(controller.get_question(1));
     }
 }

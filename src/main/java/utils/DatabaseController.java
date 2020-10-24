@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class DatabaseController {
@@ -155,11 +156,19 @@ public class DatabaseController {
     }
 
     public String get_question(int _id) throws SQLException {
-        String sql_get = "SELECT question FROM knowledge_base WHERE id = ?";
+        String separator = "\n";
+        String sql_get = "SELECT question, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14 FROM knowledge_base WHERE id = ?";
         PreparedStatement get_stmt = connection.prepareStatement(sql_get);
         get_stmt.setInt(1, _id);
         ResultSet vector = get_stmt.executeQuery();
         vector.next();
-        return vector.getString("question");
+        String result = vector.getString("question") + separator;
+        for (int i = 0; i < 14; i++) {
+            String tmp = vector.getString(i + 2);
+            if (tmp != null) {
+                result += (i + 1) + ". " + tmp + separator;
+            }
+        }
+        return result.trim();
     }
 }
