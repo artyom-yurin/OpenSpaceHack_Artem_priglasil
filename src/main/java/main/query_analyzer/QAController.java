@@ -1,5 +1,6 @@
 package main.query_analyzer;
 
+import models.Context;
 import utils.CosineSimilarity;
 import utils.JwtUtil;
 import com.google.gson.Gson;
@@ -15,6 +16,7 @@ import utils.CosineSimilarity;
 import utils.DatabaseController;
 import models.MessageResponse;
 import models.RequestBody;
+import utils.RedisController;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,6 +28,7 @@ import java.util.*;
 public class QAController {
 
     private JwtUtil jwtUtil = new JwtUtil();
+    private RedisController redis = new RedisController();
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final Gson gson = new Gson();
 
@@ -57,16 +60,22 @@ public class QAController {
         }
 
 
-        ConversationData converastion = jwtUtil.parseToken(token);
-        if (converastion == null) {
+        String chatId = jwtUtil.parseToken(token);
+        if (chatId == null) {
             return ResponseEntity.status(401)
                     .body("I don't know you");
         }
 
-        // TODO: get state and decide what to do
+        Context context = redis.getContextByChatId(chatId);
+        if (context == null) {
+            System.out.println("Context is " + context);
+        } else {
+            System.out.println("Context state is " + context.getState().toString());
+        }
+        // TODO: get context and decide what to do
 
         RequestBody req_body = new RequestBody();
-        req_body.setId(converastion.getChatId());
+        req_body.setId(chatId);
         ArrayList<String> messages = new ArrayList<>();
         messages.add(question);
         req_body.setTexts(messages);

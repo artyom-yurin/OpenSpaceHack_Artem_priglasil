@@ -10,18 +10,14 @@ import models.ConversationState;
 public class JwtUtil {
     private String secret = "c29tZS1zZWNyZXQtcGhyYXNl"; // TODO: to config
 
-    public ConversationData parseToken(String token) {
+    public String parseToken(String token) {
         try {
             Claims body = Jwts.parser()
                     .setSigningKey(secret)
                     .parseClaimsJws(token)
                     .getBody();
 
-            ConversationData cd = new ConversationData(body.getSubject());
-
-            cd.setState(ConversationState.fromString((String) body.get("state")));
-
-            return cd;
+            return body.getSubject();
 
         } catch (JwtException | ClassCastException | IllegalArgumentException e) {
             return null;
@@ -30,7 +26,6 @@ public class JwtUtil {
 
     public String generateToken(ConversationData cd) {
         Claims claims = Jwts.claims().setSubject(cd.getChatId());
-        claims.put("state", cd.getState().toString());
 
         return Jwts.builder()
                 .setClaims(claims)

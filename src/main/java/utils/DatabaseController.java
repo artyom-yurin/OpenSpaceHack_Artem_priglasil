@@ -5,14 +5,11 @@ import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.postgresql.util.PGobject;
-import utils.RequestBody;
+import models.RequestBody;
 
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 
 public class DatabaseController {
@@ -110,7 +107,7 @@ public class DatabaseController {
             // System.out.println(questions.getString("question"));
             ArrayList<String> texts = new ArrayList<>();
             texts.add(questions.getString("question"));
-            RequestBody request = new utils.RequestBody("121", texts, false);
+            RequestBody request = new RequestBody("42", texts, false);
             String jsonStr = gson.toJson(request);
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonStr, this.JSON);
             String response = RequestBody.make_post_request("http://10.241.1.243:8125/encode ", body);
