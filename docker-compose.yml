@@ -1,0 +1,36 @@
+version: '3.1'
+
+services:
+
+  questions_postgres_db:
+    build: ./databases
+    restart: always
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_USER: artem_priglasil
+      POSTGRES_PASSWORD: 4r73m_pr1gl451l
+      POSTGRES_DB: questions
+  context_redis_db:
+    image: redis
+    ports:
+      - "6379:6379"
+  indexer:
+    build: ./indexer
+    volumes:
+      - ./rubert_cased_L-12_H-768_A-12_v1:/indexer/rubert_cased_L-12_H-768_A-12_v1
+    links:
+      - "questions_postgres_db"
+      - "context_redis_db"
+  spring-app:
+    build: ./spring-app
+    ports:
+      - "8080:8080"
+    links:
+      - "questions_postgres_db"
+      - "context_redis_db"
+      - "indexer"
+
+
+volumes:
+  questions-db-data:

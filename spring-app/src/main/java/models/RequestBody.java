@@ -1,4 +1,4 @@
-package utils;
+package models;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -6,14 +6,14 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Request {
+public class RequestBody {
     private String id;
     private ArrayList<String> texts;
     private boolean is_tokenized;
 
-    Request(){}
+    public RequestBody(){}
 
-    public Request(String id, ArrayList<String> texts, boolean is_tokenized){
+    public RequestBody(String id, ArrayList<String> texts, boolean is_tokenized){
         this.id = id;
         this.texts = texts;
         this.is_tokenized = is_tokenized;
