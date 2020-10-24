@@ -84,7 +84,7 @@ public class QAController {
         for (int i = 0; i < ids.length; i++) {
             ids[i] = map.get(sortedMap.get(i));
         }
-
+        controller.closeConnection();
         MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
         return ResponseEntity.ok(gson.toJson(resp));
     }

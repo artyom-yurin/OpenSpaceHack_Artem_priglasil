@@ -55,6 +55,7 @@ public class IndexerController {
         controller.prepareDb();
         controller.initDb();
         controller.index();
+        controller.closeConnection();
         return new ResponseEntity<>("Indexing done", HttpStatus.OK);
     }
 }
