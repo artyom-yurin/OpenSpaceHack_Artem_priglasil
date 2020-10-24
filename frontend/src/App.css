@@ -9,8 +9,11 @@
     width: 60%;
 }
 
+
+
 .App .rsc-ts-bubble{
     border-radius: 0;
+    font-family: "Graphik LC";
 }
 
 .App .rsc-os{
@@ -19,6 +22,29 @@
 
 .App .rsc-os-option-element{
     border-radius: 0;
+}
+
+.App .rsc-header-title{
+    margin: auto;
+    font-family: Druk Text Cy;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 100%;
+}
+
+@font-face {
+    font-family: "Druk Text Cy";
+    src: url("fonts/Druk/DrukTextCy-Medium-App.ttf"),
+    url("fonts/Druk/DrukTextCy-Medium-Desktop.otf"),
+    url("fonts/Druk/DrukTextCy-Medium-TrueType.ttf")
+}
+
+@font-face {
+    font-family: "Graphik LC";
+    src: url("fonts/Graphik/Graphik-Medium-Desktop.otf"),
+    url("fonts/Graphik/GraphikLC-Bold-Desktop.otf"),
+    url("fonts/Graphik/GraphikLC-Bold-Desktop.otf")
 }
 
 @media (min-width: 810px) {

@@ -12,11 +12,8 @@ function CustomChatBot(props) {
     const config = {
         width: window.innerWidth / 2 + "px",
         height: window.innerHeight*0.9 + "px",
-        // headerComponent:{
-        //     margin: 0
-        // },
         floating: false,
-        headerTitle: "Открытие",
+        headerTitle: "Открытие-чат",
         botAvatar: "avatar.svg",
         bubbleStyle:{
             borderRadius:10+"px",
@@ -29,7 +26,6 @@ function CustomChatBot(props) {
         fontFamily: "Arial, Helvetica, sans-serif",
         botDelay: 100,
         headerBgColor: "#0BA2D0",
-
         headerFontColor: "#fff",
         headerFontSize: "25px",
         botBubbleColor: "#02BAE8",
