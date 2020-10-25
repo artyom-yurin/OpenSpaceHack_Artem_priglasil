@@ -1,9 +1,6 @@
 package main.tokens;
 
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import utils.JwtUtil;
 
 import javax.servlet.http.Cookie;
@@ -11,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class TokenController {
 
