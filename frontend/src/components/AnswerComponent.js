@@ -14,13 +14,13 @@ class AnswerComponent extends Component {
         if (this.requestResult === "NetworkError") {
             this.props.triggerNextStep({
                 value: "К сожалению, отсутствует подключение к базе знаний. Попробуйте позже",
-                trigger: "error"
+                trigger: "NetworkError"
             })
             this.state.isError = true;
         } else if (this.requestResult === "UnexpectedError") {
             this.props.triggerNextStep({
                 value: "К сожалению, возникла непредвиденная ошибка. Попробуйте позже",
-                trigger: "error"
+                trigger: "UnexpectedError"
             })
             this.state.isError = true;
         } else {
@@ -52,7 +52,7 @@ class AnswerComponent extends Component {
 
     render() {
         if (this.state.isError) return "Кажется что-то пошло не так...";
-        if (this.state.isUnknown) return
+        if (this.state.isUnknown) return;
         return (
             <div style={{width: '100%'}}>
                 {/*<h3>{this.proposedQuestion}</h3>*/}
