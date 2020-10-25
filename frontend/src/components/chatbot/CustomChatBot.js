@@ -118,7 +118,7 @@ export class CustomChatBot extends Component {
             },
             {
                 id: "fail",
-                message: "Похоже ответа на ваш вопрос у нас нет!",
+                message: "Похоже ответа на ваш вопрос у нас нет! Попробуйте задать другой вопрос",
                 trigger: "anythingElse"
             },
             {
@@ -127,8 +127,13 @@ export class CustomChatBot extends Component {
                 trigger: "user_input"
             },
             {
-                id: "error",
-                message: "{previousValue}",
+                id: "NetworkError",
+                message: "К сожалению, отсутствует подключение к базе знаний. Попробуйте позже",
+                end: true
+            },
+            {
+                id: "UnexpectedError",
+                message: "К сожалению, возникла непредвиденная ошибка. Попробуйте позже",
                 end: true
             }
         ];
