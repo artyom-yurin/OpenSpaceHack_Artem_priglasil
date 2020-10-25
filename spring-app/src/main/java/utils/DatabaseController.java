@@ -47,7 +47,7 @@ public class DatabaseController {
     }
 
     public void prepareDb() {
-        String prep_query = "DROP TABLE IF EXISTS knowledge_base, vectors";
+        String prep_query = "DROP TABLE IF EXISTS knowledge_base, vectors, unknown_questions";
         try (PreparedStatement prSt = connection.prepareStatement(prep_query)) {
             prSt.executeUpdate();
         } catch (Exception e) {
@@ -88,6 +88,14 @@ public class DatabaseController {
                 "id INT PRIMARY KEY REFERENCES knowledge_base(id)," +
                 "vector FLOAT[])";
         try (PreparedStatement prSt = connection.prepareStatement(index_db)) {
+            prSt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database initialization failed" + e.toString());
+        }
+        String unknown_db = "CREATE TABLE IF NOT EXISTS unknown_questions(" +
+                "id SERIAL PRIMARY KEY," +
+                "question TEXT)";
+        try (PreparedStatement prSt = connection.prepareStatement(unknown_db)) {
             prSt.executeUpdate();
         } catch (Exception e) {
             System.out.println("Database initialization failed" + e.toString());
@@ -180,5 +188,15 @@ public class DatabaseController {
                 vector.getString("use_link"),
                 steps);
         return entry;
+    }
+
+    public void push_unknown_question(String question) {
+        String insert_in_db = "INSERT INTO unknown_questions(question) VALUES (?)";
+        try (PreparedStatement prSt = connection.prepareStatement(insert_in_db)) {
+            prSt.setString(1, question);
+            prSt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database initialization failed" + e.toString());
+        }
     }
 }
