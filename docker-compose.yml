@@ -36,6 +36,10 @@ services:
     depends_on:
       - indexer
       - questions_postgres_db
+    environment:
+      POSTGRES_USER: artem_priglasil
+      POSTGRES_PASSWORD: 4r73m_pr1gl451l
+      POSTGRES_DB: questions
 
 
 volumes:

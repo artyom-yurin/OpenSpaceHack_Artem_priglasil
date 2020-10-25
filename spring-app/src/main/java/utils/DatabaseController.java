@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import models.RequestBody;
 import models.DatabaseEntry;
 
-import java.awt.dnd.DropTarget;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,9 +15,9 @@ import java.util.ArrayList;
 
 public class DatabaseController {
     //  Database credentials
-    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/questions";
-    static final String USER = "artem_priglasil";
-    static final String PASS = "4r73m_pr1gl451l";
+    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/" + System.getenv("POSTGRES_DB");
+    static final String USER = System.getenv("POSTGRES_USER");
+    static final String PASS = System.getenv("POSTGRES_PASSWORD");
     private java.sql.Connection connection;
     Gson gson = new Gson();
     MediaType JSON = MediaType.get("application/json; charset=utf-8");

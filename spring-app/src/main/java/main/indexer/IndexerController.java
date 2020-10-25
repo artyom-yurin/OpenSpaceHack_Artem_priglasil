@@ -35,6 +35,8 @@ public class IndexerController {
 
     @GetMapping("/index")
     public ResponseEntity<String> index() throws IOException, JSONException, SQLException {
+        this.controller.prepareDb();
+        this.controller.initDb();
         this.controller.index();
 /*
         controller.closeConnection();
