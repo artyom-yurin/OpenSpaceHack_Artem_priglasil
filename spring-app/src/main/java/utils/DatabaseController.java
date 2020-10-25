@@ -6,7 +6,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import models.RequestBody;
+import models.DatabaseEntry;
 
+import java.awt.dnd.DropTarget;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -156,20 +158,28 @@ public class DatabaseController {
         return vectors;
     }
 
-    public String get_question(int _id) throws SQLException {
+    public DatabaseEntry get_question(int _id) throws SQLException {
         String separator = "\n";
-        String sql_get = "SELECT question, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14 FROM knowledge_base WHERE id = ?";
+        String sql_get = "SELECT id, kb_id, request, request_type, dbo_type, question, video_link, faq_link, use_link, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14 FROM knowledge_base WHERE id = ?";
         PreparedStatement get_stmt = connection.prepareStatement(sql_get);
         get_stmt.setInt(1, _id);
         ResultSet vector = get_stmt.executeQuery();
         vector.next();
-        String result = vector.getString("question") + separator;
+        String[] steps = new String[14];
         for (int i = 0; i < 14; i++) {
-            String tmp = vector.getString(i + 2);
-            if (tmp != null) {
-                result += (i + 1) + ". " + tmp + separator;
-            }
+            steps[i] = vector.getString(i + 10);
         }
-        return result.trim();
+        String result = vector.getString("question") + separator;
+        DatabaseEntry entry = new DatabaseEntry(vector.getInt("id"),
+                vector.getString("kb_id"),
+                vector.getString("request"),
+                vector.getString("request_type"),
+                vector.getString("dbo_type"),
+                vector.getString("question"),
+                vector.getString("video_link"),
+                vector.getString("faq_link"),
+                vector.getString("use_link"),
+                steps);
+        return entry;
     }
 }
