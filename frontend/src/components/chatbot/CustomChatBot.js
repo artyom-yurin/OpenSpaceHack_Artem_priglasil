@@ -1,91 +1,175 @@
-import React from "react";
+import React, {Component} from "react";
 import ChatBot from "react-simple-chatbot";
 import {ThemeProvider} from "styled-components";
 
-function eventHandler(text) {
-    var url = "http://127.0.0.1:8080/api/chat/v1/bot?question=" + text
-    var request = require("sync-request")
-    return JSON.parse(request("GET", url).getBody('utf8')).answer
+function requestAnswer(text) {
+    try {
+        const url = "http://127.0.0.1:8080/api/chat/v1/bot?question=" + text
+        const request = require("sync-request") // sorry for not using axios
+        return JSON.parse(request("GET", url).getBody('utf8')).answer
+    } catch (exception) {
+        if (exception.name === 'NetworkError') {
+            console.log(
+                "NetworkError occurred.\n" +
+                "Exception message: \n" +
+                exception.message + "\n" +
+                "Exception stacktrace: \n" +
+                exception.stack + "\n"
+            );
+            return "NetworkError"
+        } else {
+            console.log(
+                exception.name + " occurred.\n" +
+                "Exception message: \n" +
+                exception.message + "\n" +
+                "Exception stacktrace: \n" +
+                exception.stack + "\n"
+            );
+            return "UnexpectedError"
+        }
+    }
+
 }
 
-function CustomChatBot(props) {
-    const config = {
-        width: window.innerWidth / 2 + "px",
-        height: window.innerHeight * 3 / 4 + "px",
-        floating: false,
-        botAvatar: "avatar.svg",
-        // floatingIcon: "question_icon.svg"
-    };
-
-    const theme = {
-        background: "white",
-        fontFamily: "Arial, Helvetica, sans-serif",
-        headerBgColor: "#00B2B2",
-        headerFontColor: "#fff",
-        headerFontSize: "25px",
-        botBubbleColor: "#00B2B2",
-        botFontColor: "#fff",
-        userBubbleColor: "#fff",
-        userFontColor: "#4c4c4c"
-    };
+class CustomChatBot extends Component {
+    constructor(props) {
+        super(props);
 
 
-    const steps = [
-        {
-            id: "start",
-            message: "Здравствуйте! Чем вам помочь?",
-            trigger: "user_input"
-        },
-        {
-            id: "user_input",
-            user: true,
-            trigger: "suggest"
-        },
-        {
-            id: "suggest",
-            message: ({previousValue, steps}) => {
-                var t = eventHandler(previousValue)
-                return t
-                // return previousValue;
+
+        this.config = {
+            width: window.innerWidth / 2 + "px",
+            height: window.innerHeight * 3 / 4 + "px",
+            floating: false,
+            botAvatar: "avatar.svg",
+            // floatingIcon: "question_icon.svg"
+        };
+
+        this.theme = {
+            background: "white",
+            fontFamily: "Arial, Helvetica, sans-serif",
+            headerBgColor: "#00B2B2",
+            headerFontColor: "#fff",
+            headerFontSize: "25px",
+            botBubbleColor: "#00B2B2",
+            botFontColor: "#fff",
+            userBubbleColor: "#fff",
+            userFontColor: "#4c4c4c"
+        };
+
+        this.steps = [
+            {
+                id: "start",
+                message: "Здравствуйте! Чем вам помочь?",
+                trigger: "user_input"
             },
-            trigger: "satisfaction_question"
-        },
-        {
-            id: "satisfaction_question",
-            message: "Получилось ли ответить на ваш вопрос?",
-            trigger: "satisfaction"
-        },
-        {
-            id: "satisfaction",
-            options: [
-                {
-                    value: true,
-                    label: "Да",
-                    trigger: "Done"
-                },
-                {
-                    value: false,
-                    label: "Нет",
-                    trigger: "clarification"
-                }
-            ],
-        },
-        {
-            id: "clarification",
-            message: "Пожалуйста, попробуйте уточнить вопрос",
-            trigger: "user_input"
-        },
-        {
-            id: "Done",
-            message: "Спасибо за обращение!",
-            end: true
+            {
+                id: "user_input",
+                user: true,
+                trigger: "suggest"
+            },
+            {
+                id: "suggest",
+                component: <StepsDescription/>,
+                asMessage: true,
+                trigger: "satisfaction_question"
+            },
+            {
+                id: "satisfaction_question",
+                message: "Получилось ли ответить на ваш вопрос?",
+                trigger: "satisfaction"
+            },
+            {
+                id: "satisfaction",
+                options: [
+                    {
+                        value: true,
+                        label: "Да",
+                        trigger: "success"
+                    },
+                    {
+                        value: false,
+                        label: "Нет",
+                        trigger: "clarification"
+                    }
+                ],
+            },
+            {
+                id: "clarification",
+                message: "Пожалуйста, попробуйте уточнить вопрос, избегая лишних слов",
+                trigger: "user_input"
+            },
+            {
+                id: "success",
+                message: "Спасибо за обращение!",
+                trigger: "anythingElse"
+            },
+            {
+                id: "anythingElse",
+                message: "Чем вам еще помочь?",
+                trigger: "user_input"
+            },
+            {
+                id: "error",
+                message: "{previousValue}",
+                end: true
+            }
+        ];
+    }
+
+    render() {
+        return (
+            <ThemeProvider theme={this.theme}>
+                <ChatBot steps={this.steps} {...this.config} />
+            </ThemeProvider>
+        );
+    }
+}
+
+class StepsDescription extends Component {
+    constructor(props) {
+        super(props);
+
+        this.requestResult = requestAnswer(this.props.steps.user_input.value);
+        if (this.requestResult === "NetworkError") {
+            this.props.triggerNextStep({
+                value: "К сожалению, отсутствует подключение к базе знаний. Попробуйте позже",
+                trigger: "error"
+            })
+            this.answer = ""
+        } else if (this.requestResult === "UnexpectedError") {
+            this.props.triggerNextStep({
+                value: "К сожалению, возникла непредвиденная ошибка. Попробуйте позже",
+                trigger: "error"
+            })
+            this.answer = ""
+        } else {
+            // this.requestResult = "1. На вкладке «Мои продукты» в разделе «Кредиты» выберите нужный ипотечный кредит и нажмите «Досрочное погашение»\n" +
+            //     "2. На вкладке «Частичное» введите сумму и нажмите «Создать заявку».\n" +
+            //     "3. Введите SMS-код для подтверждения\n" +
+            //     "4. Заявка создана. Не забудьте пополнить счет погашения кредита на необходимую сумму до даты списания ежемесячного платежа"
+
+            // this.requestResult = this.props.steps.user_input.value;
+
+            this.answer = this.requestResult.split("\n");
+            // this.proposedQuestion = this.answer.shift();
+            this.answerSteps = this.answer;
         }
-    ];
-    return (
-        <ThemeProvider theme={theme}>
-            <ChatBot steps={steps} {...config} />
-        </ThemeProvider>
-    );
+    }
+
+    render() {
+        if(this.answer==="") return "Кажется что-то пошло не так...";
+        return (
+            <div style={{width: '100%'}}>
+                {/*<h3>{this.proposedQuestion}</h3>*/}
+                {this.answerSteps.map((item) => (
+                    <>
+                        {item}<br/>
+                    </>
+                ))}
+            </div>
+        );
+    };
 }
 
 export default CustomChatBot;
