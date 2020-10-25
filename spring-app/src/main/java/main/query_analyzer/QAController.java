@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
-//@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge=3600)
+
 @RestController
+@CrossOrigin
 public class QAController {
 
     //private JwtUtil jwtUtil = new JwtUtil();
@@ -167,7 +168,7 @@ public class QAController {
             Map.Entry<Integer, Double> best = it.next();
             Map.Entry<Integer, Double> second = it.next();
 
-            if (best.getValue() == 1d || (best.getValue() > 0.95d && best.getValue() - second.getValue() > 0.01)) {
+            if (best.getValue() >= 1d || (best.getValue() >= 0.95d && best.getValue() - second.getValue() > 0.01)) {
                 context.setState(ConversationState.Answered);
                 redis.setContextByChatId(chatId, context);
                 DatabaseEntry entry = controller.get_question(best.getKey());
