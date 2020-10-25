@@ -39,22 +39,27 @@ class CustomChatBot extends Component {
 
         this.config = {
             width: window.innerWidth / 2 + "px",
-            height: window.innerHeight * 3 / 4 + "px",
+            height: window.innerHeight*0.9 + "px",
             floating: false,
+            headerTitle: "Открытие-чат",
             botAvatar: "avatar.svg",
+            bubbleStyle:{
+                borderRadius:10+"px",
+            }
             // floatingIcon: "question_icon.svg"
         };
 
         this.theme = {
             background: "white",
             fontFamily: "Arial, Helvetica, sans-serif",
-            headerBgColor: "#00B2B2",
+            botDelay: 100,
+            headerBgColor: "#0BA2D0",
             headerFontColor: "#fff",
             headerFontSize: "25px",
-            botBubbleColor: "#00B2B2",
+            botBubbleColor: "#02BAE8",
             botFontColor: "#fff",
             userBubbleColor: "#fff",
-            userFontColor: "#4c4c4c"
+            userFontColor: "#4c4c4c",
         };
 
         this.steps = [
