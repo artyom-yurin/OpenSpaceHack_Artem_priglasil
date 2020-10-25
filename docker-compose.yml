@@ -40,6 +40,12 @@ services:
       POSTGRES_USER: artem_priglasil
       POSTGRES_PASSWORD: 4r73m_pr1gl451l
       POSTGRES_DB: questions
+  forntend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    links:
+      - "spring-app"
 
 
 volumes:
