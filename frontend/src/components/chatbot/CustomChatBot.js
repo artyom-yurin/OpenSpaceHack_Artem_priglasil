@@ -1,12 +1,17 @@
 import React, {Component} from "react";
 import ChatBot from "react-simple-chatbot";
 import {ThemeProvider} from "styled-components";
+import API from "../../api";
 
 function requestAnswer(text) {
     try {
-        const url = "http://127.0.0.1:8080/api/chat/v1/bot?question=" + text
+        const url = API + "/bot?question=" + text
         const request = require("sync-request") // sorry for not using axios
-        return JSON.parse(request("GET", url).getBody('utf8')).answer
+        return JSON.parse(request("GET", url, {
+            headers:{
+                'Authorization':()=>this.state.chatId
+            }
+        }).getBody('utf8')).answer;
     } catch (exception) {
         if (exception.name === 'NetworkError') {
             console.log(
@@ -28,14 +33,11 @@ function requestAnswer(text) {
             return "UnexpectedError"
         }
     }
-
 }
 
 class CustomChatBot extends Component {
     constructor(props) {
         super(props);
-
-
 
         this.config = {
             width: window.innerWidth / 2 + "px",
