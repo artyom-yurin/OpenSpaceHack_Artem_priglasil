@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge=3600)
 @RestController
 public class QAController {
 
@@ -77,7 +77,7 @@ public class QAController {
             return ResponseEntity.status(400)
                     .body("question is empty");
         }
-
+        System.out.println(question);
         String chatId = token; // jwtUtil.parseToken(token); for testing system this code is commented
         if (chatId == null) {
             return ResponseEntity.status(401)

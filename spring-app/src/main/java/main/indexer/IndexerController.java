@@ -15,7 +15,7 @@ import java.io.*;
 import java.sql.SQLException;
 
 
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*", maxAge = 3600)
 @RestController
 public class IndexerController {
     MediaType JSON;
