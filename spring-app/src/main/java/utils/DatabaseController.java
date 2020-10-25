@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import models.RequestBody;
+import models.DatabaseEntry;
 
 import java.io.IOException;
 import java.sql.*;
@@ -14,9 +15,9 @@ import java.util.ArrayList;
 
 public class DatabaseController {
     //  Database credentials
-    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/questions";
-    static final String USER = "artem_priglasil";
-    static final String PASS = "4r73m_pr1gl451l";
+    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/" + System.getenv("POSTGRES_DB");
+    static final String USER = System.getenv("POSTGRES_USER");
+    static final String PASS = System.getenv("POSTGRES_PASSWORD");
     private java.sql.Connection connection;
     Gson gson = new Gson();
     MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -46,7 +47,7 @@ public class DatabaseController {
     }
 
     public void prepareDb() {
-        String prep_query = "DROP TABLE IF EXISTS knowledge_base, vectors";
+        String prep_query = "DROP TABLE IF EXISTS knowledge_base, vectors, unknown_questions";
         try (PreparedStatement prSt = connection.prepareStatement(prep_query)) {
             prSt.executeUpdate();
         } catch (Exception e) {
@@ -87,6 +88,14 @@ public class DatabaseController {
                 "id INT PRIMARY KEY REFERENCES knowledge_base(id)," +
                 "vector FLOAT[])";
         try (PreparedStatement prSt = connection.prepareStatement(index_db)) {
+            prSt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database initialization failed" + e.toString());
+        }
+        String unknown_db = "CREATE TABLE IF NOT EXISTS unknown_questions(" +
+                "id SERIAL PRIMARY KEY," +
+                "question TEXT)";
+        try (PreparedStatement prSt = connection.prepareStatement(unknown_db)) {
             prSt.executeUpdate();
         } catch (Exception e) {
             System.out.println("Database initialization failed" + e.toString());
@@ -156,20 +165,37 @@ public class DatabaseController {
         return vectors;
     }
 
-    public String get_question(int _id) throws SQLException {
+    public DatabaseEntry get_question(int _id) throws SQLException {
         String separator = "\n";
-        String sql_get = "SELECT question, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14 FROM knowledge_base WHERE id = ?";
+        String sql_get = "SELECT id, kb_id, request, request_type, dbo_type, question, video_link, faq_link, use_link, step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12, step13, step14 FROM knowledge_base WHERE id = ?";
         PreparedStatement get_stmt = connection.prepareStatement(sql_get);
         get_stmt.setInt(1, _id);
         ResultSet vector = get_stmt.executeQuery();
         vector.next();
-        String result = vector.getString("question") + separator;
+        String[] steps = new String[14];
         for (int i = 0; i < 14; i++) {
-            String tmp = vector.getString(i + 2);
-            if (tmp != null) {
-                result += (i + 1) + ". " + tmp + separator;
-            }
+            steps[i] = vector.getString(i + 10);
         }
-        return result.trim();
+        DatabaseEntry entry = new DatabaseEntry(vector.getInt("id"),
+                vector.getString("kb_id"),
+                vector.getString("request"),
+                vector.getString("request_type"),
+                vector.getString("dbo_type"),
+                vector.getString("question"),
+                vector.getString("video_link"),
+                vector.getString("faq_link"),
+                vector.getString("use_link"),
+                steps);
+        return entry;
+    }
+
+    public void push_unknown_question(String question) {
+        String insert_in_db = "INSERT INTO unknown_questions(question) VALUES (?)";
+        try (PreparedStatement prSt = connection.prepareStatement(insert_in_db)) {
+            prSt.setString(1, question);
+            prSt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database initialization failed" + e.toString());
+        }
     }
 }

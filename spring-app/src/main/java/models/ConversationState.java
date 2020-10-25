@@ -7,12 +7,6 @@ public enum ConversationState {
             return "init";
         }
     },
-    InProgress {
-        @Override
-        public String toString() {
-            return "progress";
-        }
-    },
     Clarification {
         @Override
         public String toString() {
@@ -30,8 +24,6 @@ public enum ConversationState {
         switch (str_state) {
             case ("init"):
                 return Init;
-            case ("progress"):
-                return InProgress;
             case ("clarification"):
                 return Clarification;
             case ("answered"):
