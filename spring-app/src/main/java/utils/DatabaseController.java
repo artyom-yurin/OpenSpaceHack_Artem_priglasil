@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class DatabaseController {
     //  Database credentials
-    static final String DB_URL = "jdbc:postgresql://localhost:5432/questions";
+    static final String DB_URL = "jdbc:postgresql://questions_postgres_db:5432/questions";
     static final String USER = "artem_priglasil";
     static final String PASS = "4r73m_pr1gl451l";
     private java.sql.Connection connection;
