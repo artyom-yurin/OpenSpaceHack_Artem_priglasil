@@ -8,8 +8,8 @@ function requestAnswer(text) {
         const url = API + "/bot?question=" + text
         const request = require("sync-request") // sorry for not using axios
         return JSON.parse(request("GET", url, {
-            headers:{
-                'Authorization':()=>this.state.chatId
+            headers: {
+                'Authorization': this.state.chatId
             }
         }).getBody('utf8')).answer;
     } catch (exception) {
@@ -41,12 +41,12 @@ class CustomChatBot extends Component {
 
         this.config = {
             width: window.innerWidth / 2 + "px",
-            height: window.innerHeight*0.9 + "px",
+            height: window.innerHeight * 0.9 + "px",
             floating: false,
             headerTitle: "Открытие-чат",
             botAvatar: "avatar.svg",
-            bubbleStyle:{
-                borderRadius:10+"px",
+            bubbleStyle: {
+                borderRadius: 10 + "px",
             }
             // floatingIcon: "question_icon.svg"
         };
@@ -165,7 +165,7 @@ class StepsDescription extends Component {
     }
 
     render() {
-        if(this.answer==="") return "Кажется что-то пошло не так...";
+        if (this.answer === "") return "Кажется что-то пошло не так...";
         return (
             <div style={{width: '100%'}}>
                 {/*<h3>{this.proposedQuestion}</h3>*/}
