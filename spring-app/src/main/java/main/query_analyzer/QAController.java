@@ -227,12 +227,24 @@ public class QAController {
             while (cit.hasNext()) {
                 clarification_question.append(", {").append(cit.next()).append("}");
             }
+            clarification_question.append(", {").append("Другое").append("}");
 
             context.setState(ConversationState.Clarification);
             redis.setContextByChatId(chatId, context);
             MessageResponse resp = new MessageResponse(clarification_question.toString());
             return ResponseEntity.ok().body(gson.toJson(resp));
         } else if (state == ConversationState.Clarification) {
+            if (question.equals("Другое")) {
+                DatabaseController controller = new DatabaseController();
+                if (controller.establishConnection()) {
+                    System.out.println("Database connected");
+                }
+                controller.push_unknown_question(context.getOriginalQuestion());
+                context = new Context();
+                redis.setContextByChatId(chatId, context);
+                return ResponseEntity.ok().body(gson.toJson(new MessageResponse("unknown")));
+            }
+
             Set<String> categories = context.getCategories();
             if (categories.size() == 1) {
                 Set<String> topics = context.getTypes();
@@ -288,6 +300,8 @@ public class QAController {
                 while (cit.hasNext()) {
                     clarification_question.append(", {").append(cit.next()).append("}");
                 }
+
+                clarification_question.append(", {").append("Другое").append("}");
 
                 context.setState(ConversationState.Clarification);
                 redis.setContextByChatId(chatId, context);
