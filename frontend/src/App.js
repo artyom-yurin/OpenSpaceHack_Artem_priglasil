@@ -1,21 +1,26 @@
-import React, {Component, useState} from "react";
+import React, {Component} from "react";
 import './App.css';
-import CustomChatBot from "./components/chatbot/CustomChatBot";
+import {CustomChatBot} from "./components/chatbot/CustomChatBot";
 import API from "./api";
 
 class App extends Component {
     constructor(props) {
         super(props);
-        const [chatId, setChatId] = useState(0);
-
+        this.state = {
+            chatId: 1337
+        }
+        this.requestChatId()
     }
 
     requestChatId() {
         try {
-            const url = API + "/authorize"
+            const url = API() + "/authorize"
             const request = require("sync-request"); // sorry for not using axios
-            const token = JSON.parse(request("GET", url).getBody('utf8')).token
-            this.setState({chatId: token});
+            const data = request("GET", url).getBody('utf8')
+            console.log("data:" + data)
+            const token = JSON.parse(data).token
+            console.log("token:" + token)
+            this.state.chatId = token
         } catch (exception) {
             if (exception.name === 'NetworkError') {
                 console.log(
