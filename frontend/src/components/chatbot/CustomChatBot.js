@@ -2,16 +2,21 @@ import React, {Component} from "react";
 import ChatBot from "react-simple-chatbot";
 import {ThemeProvider} from "styled-components";
 import API from "../../api";
+import AnswerComponent from "../AnswerComponent";
 
-function requestAnswer(text) {
+export function requestAnswer(text, chatId) {
     try {
-        const url = API + "/bot?question=" + text
+        const url = API() + "/bot?question=" + text
         const request = require("sync-request") // sorry for not using axios
-        return JSON.parse(request("GET", url, {
-            headers:{
-                'Authorization':()=>this.state.chatId
+        console.log("token:" + chatId)
+        const data = request("GET", url, {
+            headers: {
+                'Authorization': chatId
             }
-        }).getBody('utf8')).answer;
+        }).getBody('utf8')
+
+        console.log("data:" + data)
+        return JSON.parse(data).answer;
     } catch (exception) {
         if (exception.name === 'NetworkError') {
             console.log(
@@ -35,18 +40,18 @@ function requestAnswer(text) {
     }
 }
 
-class CustomChatBot extends Component {
+export class CustomChatBot extends Component {
     constructor(props) {
         super(props);
 
         this.config = {
             width: window.innerWidth / 2 + "px",
-            height: window.innerHeight*0.9 + "px",
+            height: window.innerHeight * 0.9 + "px",
             floating: false,
             headerTitle: "Открытие-чат",
             botAvatar: "avatar.svg",
-            bubbleStyle:{
-                borderRadius:10+"px",
+            bubbleStyle: {
+                borderRadius: 10 + "px",
             }
             // floatingIcon: "question_icon.svg"
         };
@@ -77,7 +82,7 @@ class CustomChatBot extends Component {
             },
             {
                 id: "suggest",
-                component: <StepsDescription/>,
+                component: <AnswerComponent chatId={this.props.chatId}/>,
                 asMessage: true,
                 trigger: "satisfaction_question"
             },
@@ -112,13 +117,23 @@ class CustomChatBot extends Component {
                 trigger: "anythingElse"
             },
             {
+                id: "fail",
+                message: "Похоже ответа на ваш вопрос у нас нет! Попробуйте задать другой вопрос",
+                trigger: "anythingElse"
+            },
+            {
                 id: "anythingElse",
                 message: "Чем вам еще помочь?",
                 trigger: "user_input"
             },
             {
-                id: "error",
-                message: "{previousValue}",
+                id: "NetworkError",
+                message: "К сожалению, отсутствует подключение к базе знаний. Попробуйте позже",
+                end: true
+            },
+            {
+                id: "UnexpectedError",
+                message: "К сожалению, возникла непредвиденная ошибка. Попробуйте позже",
                 end: true
             }
         ];
@@ -132,51 +147,3 @@ class CustomChatBot extends Component {
         );
     }
 }
-
-class StepsDescription extends Component {
-    constructor(props) {
-        super(props);
-
-        this.requestResult = requestAnswer(this.props.steps.user_input.value);
-        if (this.requestResult === "NetworkError") {
-            this.props.triggerNextStep({
-                value: "К сожалению, отсутствует подключение к базе знаний. Попробуйте позже",
-                trigger: "error"
-            })
-            this.answer = ""
-        } else if (this.requestResult === "UnexpectedError") {
-            this.props.triggerNextStep({
-                value: "К сожалению, возникла непредвиденная ошибка. Попробуйте позже",
-                trigger: "error"
-            })
-            this.answer = ""
-        } else {
-            // this.requestResult = "1. На вкладке «Мои продукты» в разделе «Кредиты» выберите нужный ипотечный кредит и нажмите «Досрочное погашение»\n" +
-            //     "2. На вкладке «Частичное» введите сумму и нажмите «Создать заявку».\n" +
-            //     "3. Введите SMS-код для подтверждения\n" +
-            //     "4. Заявка создана. Не забудьте пополнить счет погашения кредита на необходимую сумму до даты списания ежемесячного платежа"
-
-            // this.requestResult = this.props.steps.user_input.value;
-
-            this.answer = this.requestResult.split("\n");
-            // this.proposedQuestion = this.answer.shift();
-            this.answerSteps = this.answer;
-        }
-    }
-
-    render() {
-        if(this.answer==="") return "Кажется что-то пошло не так...";
-        return (
-            <div style={{width: '100%'}}>
-                {/*<h3>{this.proposedQuestion}</h3>*/}
-                {this.answerSteps.map((item) => (
-                    <>
-                        {item}<br/>
-                    </>
-                ))}
-            </div>
-        );
-    };
-}
-
-export default CustomChatBot;
