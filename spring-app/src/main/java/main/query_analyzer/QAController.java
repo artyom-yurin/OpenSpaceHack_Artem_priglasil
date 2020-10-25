@@ -2,8 +2,8 @@ package main.query_analyzer;
 
 import com.google.gson.Gson;
 import main.tokens.TokenController;
-import models.Context;
-import models.ConversationState;
+import models.*;
+import models.RequestBody;
 import okhttp3.MediaType;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utils.CosineSimilarity;
 import utils.DatabaseController;
-import models.MessageResponse;
-import models.RequestBody;
 import utils.JwtUtil;
 import utils.RedisController;
 
@@ -27,10 +25,31 @@ import java.util.*;
 @RestController
 public class QAController {
 
-    private JwtUtil jwtUtil = new JwtUtil();
+    //private JwtUtil jwtUtil = new JwtUtil();
     private RedisController redis = new RedisController();
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final Gson gson = new Gson();
+
+    private static Map<Integer, Double> sortByValue(Map<Integer, Double> unsortMap) {
+
+        List<Map.Entry<Integer, Double>> list =
+                new LinkedList<Map.Entry<Integer, Double>>(unsortMap.entrySet());
+
+
+        list.sort(new Comparator<Map.Entry<Integer, Double>>() {
+            public int compare(Map.Entry<Integer, Double> o1,
+                               Map.Entry<Integer, Double> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
+            }
+        });
+
+        Map<Integer, Double> sortedMap = new LinkedHashMap<Integer, Double>();
+        for (Map.Entry<Integer, Double> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
 
     double[][] make_doc_matrix() throws FileNotFoundException, JSONException {
         ArrayList<double[]> docList = new ArrayList<>();
@@ -53,14 +72,13 @@ public class QAController {
     }
 
     @GetMapping(value = "/api/chat/v1/bot", produces = "application/json")
-    ResponseEntity<String> message(@CookieValue(value = "OpenChat", defaultValue = "") String token, @RequestParam(value = "question", defaultValue = "") String question) throws IOException, JSONException, SQLException {
-        if (token.isEmpty()) {
-            return ResponseEntity.status(401)
-                    .body("I don't know you");
+    ResponseEntity<String> message(@RequestHeader(value = "Authorization", defaultValue = "0") String token, @RequestParam(value = "question", defaultValue = "") String question) throws IOException, JSONException, SQLException {
+        if (question.isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body("question is empty");
         }
 
-
-        String chatId = jwtUtil.parseToken(token);
+        String chatId = token; // jwtUtil.parseToken(token); for testing system this code is commented
         if (chatId == null) {
             return ResponseEntity.status(401)
                     .body("I don't know you");
@@ -73,9 +91,46 @@ public class QAController {
         } else {
             System.out.println("Context state is " + context.getState().toString());
         }
-        // TODO: get context and decide what to do
+
+        context.newRequest();
         ConversationState state = context.getState();
+        if (state == ConversationState.Answered) {
+            if (question.toLowerCase().equals("no")) {
+                Map<Integer, ContextCandidate> entries = context.getCandidates();
+
+
+                if (context.getCounter() == 6 || entries.isEmpty()) {
+                    DatabaseController controller = new DatabaseController();
+                    if (controller.establishConnection()) {
+                        System.out.println("Database connected");
+                    }
+                    controller.push_unknown_question(context.getOriginalQuestion());
+                    context = new Context();
+                    redis.setContextByChatId(chatId, context);
+                    return ResponseEntity.ok().body(gson.toJson(new MessageResponse("unknown")));
+                }
+
+                Map.Entry<Integer, ContextCandidate> entity = entries.entrySet().iterator().next();
+                ContextCandidate answer = entity.getValue();
+                entries.remove(entity.getKey());
+
+                context.setCandidates(entries);
+                redis.setContextByChatId(chatId, context);
+
+                MessageResponse resp = new MessageResponse(answer.getDatabaseEntry().getAnswer());
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            } else if (question.toLowerCase().equals("yes")) {
+                context = new Context();
+                redis.setContextByChatId(chatId, context);
+                MessageResponse resp = new MessageResponse("Отлично, жду следующий вопрос!");
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            }
+            state = ConversationState.Init;
+            context.resetCounter();
+        }
+
         if (state == ConversationState.Init) {
+            context.setOriginalQuestion(question);
             RequestBody req_body = new RequestBody();
             req_body.setId(chatId);
             ArrayList<String> messages = new ArrayList<>();
@@ -101,25 +156,147 @@ public class QAController {
                 query_vector[i] = innerArray.getDouble(i);
             }
             double[] similarity = CosineSimilarity.cosine_similarity(docMatrix, query_vector);
-            Map<Double, Integer> map = new HashMap<>();
+            HashMap<Integer, Double> map = new HashMap<Integer, Double>();
             for (int i = 0; i < similarity.length; i++) {
-                map.put(similarity[i], i + 1);
+                map.put(i + 1, similarity[i]);
             }
-            List<Double> sortedMap = new ArrayList<>(map.keySet());
-            sortedMap.sort(Collections.reverseOrder());
+            Map<Integer, Double> sorted_map = sortByValue(map);
 
-            List<Double> map_best = sortedMap.subList(0,10);
-            System.out.println(map_best.toString());
+            Iterator<Map.Entry<Integer, Double>> it = sorted_map.entrySet().iterator();
 
+            Map.Entry<Integer, Double> best = it.next();
+            Map.Entry<Integer, Double> second = it.next();
 
-        } else{
-            System.out.println("");
+            if (best.getValue() == 1d || (best.getValue() > 0.95d && best.getValue() - second.getValue() > 0.01)) {
+                context.setState(ConversationState.Answered);
+                redis.setContextByChatId(chatId, context);
+                DatabaseEntry entry = controller.get_question(best.getKey());
+                MessageResponse resp = new MessageResponse(entry.getAnswer());
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            }
+
+            Set<String> categories = new HashSet<>();
+            HashMap<Integer, ContextCandidate> entries = new LinkedHashMap<>();
+
+            DatabaseEntry best_entry = controller.get_question(best.getKey());
+            categories.add(best_entry.request);
+            entries.put(best.getKey(), new ContextCandidate(best.getValue(), best_entry));
+            DatabaseEntry second_entry = controller.get_question(second.getKey());
+            categories.add(second_entry.request);
+            entries.put(second.getKey(), new ContextCandidate(second.getValue(), second_entry));
+
+            for (int i = 2; i < 10 && it.hasNext(); i++) {
+                Map.Entry<Integer, Double> entity = it.next();
+                DatabaseEntry entry = controller.get_question(entity.getKey());
+                categories.add(entry.request);
+                entries.put(entity.getKey(), new ContextCandidate(entity.getValue(), entry));
+            }
+
+            context.setCandidates(entries);
+            context.setCategories(categories);
+            // case: in one category, shoud find request_type
+            if (categories.size() == 1) {
+                Set<String> types = new HashSet<>();
+                for (Map.Entry<Integer, ContextCandidate> entry : entries.entrySet()) {
+                    types.add(entry.getValue().getDatabaseEntry().request_type);
+                }
+
+                context.setTypes(types);
+                if (types.size() == 1) {
+                    context.setState(ConversationState.Answered);
+                    redis.setContextByChatId(chatId, context);
+                    MessageResponse resp = new MessageResponse(best_entry.getAnswer());
+                    return ResponseEntity.ok().body(gson.toJson(resp));
+                }
+
+                Iterator<String> cit = types.iterator();
+                StringBuilder clarification_question = new StringBuilder("Уточняющий запрос: Уточните тип запроса: {" + cit.next() + "}");
+                while (cit.hasNext()) {
+                    clarification_question.append(", {").append(cit.next()).append("}");
+                }
+
+                context.setState(ConversationState.Clarification);
+                redis.setContextByChatId(chatId, context);
+
+                MessageResponse resp = new MessageResponse(clarification_question.toString());
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            }
+
+            Iterator<String> cit = categories.iterator();
+            StringBuilder clarification_question = new StringBuilder("Уточняющий запрос: Уточните категорию: {" + cit.next() + "}");
+            while (cit.hasNext()) {
+                clarification_question.append(", {").append(cit.next()).append("}");
+            }
+
+            context.setState(ConversationState.Clarification);
+            redis.setContextByChatId(chatId, context);
+            MessageResponse resp = new MessageResponse(clarification_question.toString());
+            return ResponseEntity.ok().body(gson.toJson(resp));
+        } else if (state == ConversationState.Clarification) {
+            Set<String> categories = context.getCategories();
+            if (categories.size() == 1) {
+                Set<String> topics = context.getTypes();
+                if (!topics.contains(question)) {
+                    return ResponseEntity.status(400)
+                            .body("It is not topic");
+                }
+                context.setTypes(new HashSet<>(Collections.singletonList(question)));
+                Map<Integer, ContextCandidate> entries = context.getCandidates();
+                entries.entrySet().removeIf(integerContextCandidateEntry -> !integerContextCandidateEntry.getValue().getDatabaseEntry().request_type.equals(question));
+
+                Map.Entry<Integer, ContextCandidate> entity = entries.entrySet().iterator().next();
+                ContextCandidate answer = entity.getValue();
+                entries.remove(entity.getKey());
+
+                context.setState(ConversationState.Answered);
+                context.setCandidates(entries);
+                redis.setContextByChatId(chatId, context);
+
+                MessageResponse resp = new MessageResponse(answer.getDatabaseEntry().getAnswer());
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            } else {
+                if (!categories.contains(question)) {
+                    return ResponseEntity.status(400)
+                            .body("It is not category");
+                }
+                context.setCategories(new HashSet<>(Collections.singletonList(question)));
+                Map<Integer, ContextCandidate> entries = context.getCandidates();
+                entries.entrySet().removeIf(integerContextCandidateEntry -> !integerContextCandidateEntry.getValue().getDatabaseEntry().request.equals(question));
+
+                Set<String> types = new HashSet<>();
+                for (Map.Entry<Integer, ContextCandidate> entry : entries.entrySet()) {
+                    types.add(entry.getValue().getDatabaseEntry().request_type);
+                }
+
+                context.setTypes(types);
+                if (types.size() == 1) {
+                    context.setState(ConversationState.Answered);
+
+                    Map.Entry<Integer, ContextCandidate> entity = entries.entrySet().iterator().next();
+                    ContextCandidate answer = entity.getValue();
+                    entries.remove(entity.getKey());
+
+                    context.setCandidates(entries);
+                    redis.setContextByChatId(chatId, context);
+
+                    MessageResponse resp = new MessageResponse(answer.getDatabaseEntry().getAnswer());
+                    return ResponseEntity.ok().body(gson.toJson(resp));
+                }
+
+                Iterator<String> cit = types.iterator();
+                StringBuilder clarification_question = new StringBuilder("Уточняющий запрос: Уточните тип запроса: {" + cit.next() + "}");
+                while (cit.hasNext()) {
+                    clarification_question.append(", {").append(cit.next()).append("}");
+                }
+
+                context.setState(ConversationState.Clarification);
+                redis.setContextByChatId(chatId, context);
+
+                MessageResponse resp = new MessageResponse(clarification_question.toString());
+                return ResponseEntity.ok().body(gson.toJson(resp));
+            }
         }
 
-
-            //MessageResponse resp = new MessageResponse(controller.get_question(ids[0]));
-            return ResponseEntity.ok().build(); //(gson.toJson(resp));
+        return ResponseEntity.badRequest().build();
     }
-
-
 }
